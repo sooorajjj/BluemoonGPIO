@@ -20,12 +20,8 @@ import static java.lang.Thread.sleep;
 
 public class MainActivity extends AppCompatActivity {
     private File file;
-    private static Thread sGpioThread7 ;
-    private static final AtomicInteger sCurrentValue = new AtomicInteger(0);
-    final String gpioPin = "142";
+    final String gpioPin = "938";
     TextView text;
-    Button btn;
-    private static View sBackground;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,26 +31,19 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        sBackground = findViewById(android.R.id.content);
 
-        if(sGpioThread7 == null){
-            sGpioThread7 = new Thread(mGpioRunnable7, "GPIO-Thread");
-            Log.d("thread7","start");
-            sGpioThread7.start();
-
-        }
         text = findViewById(R.id.text);
 
 //        text.setText("Hello Gpio  value : "+sCurrentValue.toString());
-        btn = findViewById(R.id.button);
-        btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-//                text.setText("Hello Gpio value : "+sCurrentValue.toString());
-            }
-        });
+//        btn = findViewById(R.id.button);
+//        btn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+////                text.setText("Hello Gpio value : "+sCurrentValue.toString());
+//            }
+//        });
 
-//        blink()
+        blink();
 
 
 
@@ -62,40 +51,20 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        sBackground = null;
+//        sBackground = null;
         super.onDestroy();
     }
-
-    private void updateView(){
-        runOnUiThread(mColorRunnable);
-    }
-
-    private final Runnable mColorRunnable = new Runnable() {
-        private Random mRand = new Random();
-        @Override
-        public void run() {
-            int r = mRand.nextInt(256);
-            int g = mRand.nextInt(256);
-            int b = mRand.nextInt(256);
-
-            if(sBackground != null){
-                sBackground.setBackgroundColor(Color.rgb(r, g, b));
-                sBackground.postInvalidate();
-                ((TextView)sBackground.findViewById(R.id.text)).setText(
-                        String.format("GPIO value is: %d", sCurrentValue.get()));
-
-            }
-        }
-    };
 
     public void blink(){//blink led
 
         while (true){
             try {
-                WriteGPIO("142", "0");
-                sleep(1000);
-                WriteGPIO("142", "1");
-                sleep(1000);
+                WriteGPIO(gpioPin, "1");
+                text.setText(R.string.gpioHigh);
+                sleep(5000);
+                WriteGPIO(gpioPin, "0");
+                text.setText(R.string.gpioLow);
+                sleep(5000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -131,33 +100,5 @@ public class MainActivity extends AppCompatActivity {
             Log.i("LOG", "write failed 2 : " +e.getMessage());
         }
     }
-
-    private static int sInterruptCount = 0;
-        final Runnable mGpioRunnable7 = new Runnable() {
-            @Override
-            public void run() {
-                while(true){
-
-                    NativeGpio.readGpio("/sys/class/gpio/gpio" + gpioPin + "/value", new NativeGpio.GpioInterruptCallback(){
-                        @Override
-                        public void onNewValue(int value) {
-                            if (value == 1) {
-                                Log.d("thread7","send");
-                                Log.d("LOG: GPIO", gpioPin + " " + value );
-
-                            } else {
-                                Log.d("LOG: GPIO", gpioPin + " " + value );
-
-                            }
-
-                            sInterruptCount++;
-                            sCurrentValue.set(value);
-                            updateView();
-                        }
-                    });
-
-                }
-            }
-        };
 
 }

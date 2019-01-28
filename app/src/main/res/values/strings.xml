@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Bluemoon GPIO</string>
+    <string name="gpioHigh">Hello Gpio  value : 1</string>
+    <string name="gpioLow">Hello Gpio  value : 0</string>
 </resources>
