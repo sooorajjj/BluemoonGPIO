@@ -1,11 +1,9 @@
 package com.vst.bluemoongpio;
 
-import android.graphics.Color;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import java.io.File;
@@ -13,37 +11,23 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static java.lang.Thread.sleep;
 
 public class MainActivity extends AppCompatActivity {
     private File file;
     final String gpioPin = "938";
     TextView text;
+    private Handler mHandler = new Handler();
+    private static final int INTERVAL_BETWEEN_BLINKS_MS = 5000;
+    boolean gpioHigh;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-
-
-
         text = findViewById(R.id.text);
 
-//        text.setText("Hello Gpio  value : "+sCurrentValue.toString());
-//        btn = findViewById(R.id.button);
-//        btn.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-////                text.setText("Hello Gpio value : "+sCurrentValue.toString());
-//            }
-//        });
-
-        blink();
+        mHandler.post(mBlinkRunnable);
 
 
 
@@ -52,24 +36,30 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
 //        sBackground = null;
+        mHandler.removeCallbacks(mBlinkRunnable);
         super.onDestroy();
     }
 
-    public void blink(){//blink led
 
-        while (true){
-            try {
+    private Runnable mBlinkRunnable = new Runnable() {
+        @Override
+        public void run() {
+            // Toggle the GPIO state
+            if (!gpioHigh) {
                 WriteGPIO(gpioPin, "1");
+                gpioHigh = true;
                 text.setText(R.string.gpioHigh);
-                sleep(5000);
+                mHandler.postDelayed(mBlinkRunnable, INTERVAL_BETWEEN_BLINKS_MS);
+            } else {
                 WriteGPIO(gpioPin, "0");
+                gpioHigh = false;
                 text.setText(R.string.gpioLow);
-                sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                mHandler.postDelayed(mBlinkRunnable, INTERVAL_BETWEEN_BLINKS_MS);
             }
+
         }
-    }
+    };
+
 
 
 
